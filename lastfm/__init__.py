@@ -52,23 +52,23 @@ class Api:
         for k, v in params.iteritems():
             utf8_params[k] = unicode(v).encode('utf-8')
 
-        json = json.loads(self._http_call(url, utf8_params))
-        if 'error' in json:
-            raise LastFMError(json['error'], json['message'])
+        response = json.loads(self._http_call(url, utf8_params, post=post))
+        if 'error' in response:
+            raise LastFMError(response['error'], response['message'])
 
-        return json
+        return response
 
     def _http_call(self, url, utf8_params, post=False):
         data = urlencode(utf8_params)
         if not post:
             url += '?' + data
             data = None
-        return urlopen(url, data)
+        return urlopen(url, data).read()
 
     def get_session(self):
-        json = self.query_api('auth.getSession',
+        response = self.query_api('auth.getSession',
                               {'token': self.token})
-        return json['session']
+        return response['session']
 
     def get_recommended_artists(self):
         return self.query_api('user.getRecommendedArtists', {},
