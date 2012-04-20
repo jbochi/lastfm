@@ -6,14 +6,14 @@ from django.utils import simplejson
 class LastFMError(Exception):
     def __init__(self, code, description):
         self.code = code
-        self.description = description        
+        self.description = description
 
     def __str__(self):
         return '%s - %s' % (self.code, self.description)
 
 class Api:
     API_ROOT_URL = "http://ws.audioscrobbler.com/2.0/"
-    
+
     def __init__(self, api_key, api_secret, token=None, session_key=None):
         self.api_key = api_key
         self.api_secret = api_secret
@@ -29,7 +29,7 @@ class Api:
         m.update(self.api_secret)
         return m.hexdigest()
 
-    def query_api(self, method, params, sign=True, post=False):            
+    def query_api(self, method, params, sign=True, post=False):
         if 'api_key' not in params:
             params['api_key'] = self.api_key
 
@@ -40,7 +40,7 @@ class Api:
             params['sk'] = self.session_key
 
         params['format'] = 'json'
-            
+
         if sign and 'api_sig' not in params:
             params['api_sig'] = self._get_signature(params)
 
@@ -49,17 +49,19 @@ class Api:
         utf8_params = {}
         for k, v in params.iteritems():
             utf8_params[k] = unicode(v).encode('utf-8')
+
+        json = simplejson.load(self._http_call(url, utf8_params))
+        if 'error' in json:
+            raise LastFMError(json['error'], json['message'])
+
+        return json
+
+    def _http_call(self, url, utf8_params, post=False):
         data = urlencode(utf8_params)
-        
         if not post:
             url += '?' + data
             data = None
-
-        json = simplejson.load(urlopen(url, data))
-        if 'error' in json:
-            raise LastFMError(json['error'], json['message'])
-        
-        return json
+        return urlopen(url, data)
 
     def get_session(self):
         json = self.query_api('auth.getSession',
