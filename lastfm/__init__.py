@@ -16,7 +16,8 @@ class LastFMError(Exception):
 class Api:
     API_ROOT_URL = "http://ws.audioscrobbler.com/2.0/"
 
-    def __init__(self, api_key, api_secret, token=None, session_key=None):
+    def __init__(self, api_key, api_secret, token=None, session_key=None, api_url=None):
+        self.api_root_url = api_url or API_ROOT_URL
         self.api_key = api_key
         self.api_secret = api_secret
         self.token = token
@@ -46,7 +47,7 @@ class Api:
         if sign and 'api_sig' not in params:
             params['api_sig'] = self._get_signature(params)
 
-        url = self.API_ROOT_URL
+        url = self.api_root_url
 
         utf8_params = {}
         for k, v in params.iteritems():
