@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 import md5
+import time
+import json
+import datetime
 from urllib import urlopen, urlencode
-from django.utils import simplejson
 
 class LastFMError(Exception):
     def __init__(self, code, description):
@@ -50,7 +52,7 @@ class Api:
         for k, v in params.iteritems():
             utf8_params[k] = unicode(v).encode('utf-8')
 
-        json = simplejson.load(self._http_call(url, utf8_params))
+        json = json.loads(self._http_call(url, utf8_params))
         if 'error' in json:
             raise LastFMError(json['error'], json['message'])
 
@@ -87,6 +89,8 @@ class Api:
 
 
     def scrobble(self, artist, track, timestamp):
+        if isinstance(timestamp, datetime.datetime):
+            timestamp = time.mktime(timestamp)
         return self.query_api('track.scrobble',
                               {'timestamp': timestamp,
                                'track': track,
